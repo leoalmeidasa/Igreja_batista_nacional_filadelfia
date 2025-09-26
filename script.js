@@ -109,9 +109,28 @@ document.addEventListener('DOMContentLoaded', function() {
     prayerForm.addEventListener('submit', function(e) {
         e.preventDefault();
 
-        const name = document.getElementById('name').value;
+        const name = document.getElementById('name').value.trim();
         const whatsapp = document.getElementById('whatsapp').value;
-        const prayer = document.getElementById('prayer').value;
+        const prayer = document.getElementById('prayer').value.trim();
+
+        // Validate WhatsApp number
+        const whatsappNumbers = whatsapp.replace(/\D/g, '');
+
+        // Check if all fields are filled
+        if (!name || !whatsapp || !prayer) {
+            alert('Por favor, preencha todos os campos obrigatórios.');
+            return;
+        }
+
+        // Validate WhatsApp format using Brazilian phone validation
+        const phoneValidation = isValidBrazilianPhone(whatsappNumbers);
+        if (!phoneValidation.valid) {
+            alert(`Número de WhatsApp inválido!\n\n${phoneValidation.message}\n\nExemplo válido: (98) 98100-4176`);
+            document.getElementById('whatsapp').focus();
+            document.getElementById('whatsapp').style.borderColor = '#ff6b6b';
+            showValidationMessage(document.getElementById('whatsapp'), phoneValidation.message);
+            return;
+        }
 
         // Format message for WhatsApp
         const message = `*PEDIDO DE ORAÇÃO*\n\n*Nome:* ${name}\n*WhatsApp:* ${whatsapp}\n\n*Pedido:* ${prayer}`;
@@ -134,15 +153,89 @@ document.addEventListener('DOMContentLoaded', function() {
             submitBtn.textContent = originalText;
             submitBtn.style.background = '';
             this.reset();
+            // Reset border colors
+            document.getElementById('whatsapp').style.borderColor = '';
+            removeValidationMessage(document.getElementById('whatsapp'));
         }, 1000);
     });
 
-    // Mask for WhatsApp field
+    // Function to validate Brazilian phone number
+    function isValidBrazilianPhone(number) {
+        const cleaned = number.replace(/\D/g, '');
+
+        // Must have 11 digits
+        if (cleaned.length !== 11) return false;
+
+        // Extract parts
+        const ddd = cleaned.substring(0, 2);
+        const firstDigit = cleaned.charAt(2);
+        const phoneNumber = cleaned.substring(2);
+
+        // Valid Brazilian DDDs
+        const validDDDs = [
+            '11', '12', '13', '14', '15', '16', '17', '18', '19', // São Paulo
+            '21', '22', '24', // Rio de Janeiro
+            '27', '28', // Espírito Santo
+            '31', '32', '33', '34', '35', '37', '38', // Minas Gerais
+            '41', '42', '43', '44', '45', '46', // Paraná
+            '47', '48', '49', // Santa Catarina
+            '51', '53', '54', '55', // Rio Grande do Sul
+            '61', // Distrito Federal
+            '62', '64', // Goiás
+            '63', // Tocantins
+            '65', '66', // Mato Grosso
+            '67', // Mato Grosso do Sul
+            '68', // Acre
+            '69', // Rondônia
+            '71', '73', '74', '75', '77', // Bahia
+            '79', // Sergipe
+            '81', '87', // Pernambuco
+            '82', // Alagoas
+            '83', // Paraíba
+            '84', // Rio Grande do Norte
+            '85', '88', // Ceará
+            '86', '89', // Piauí
+            '91', '93', '94', // Pará
+            '92', '97', // Amazonas
+            '95', // Roraima
+            '96', // Amapá
+            '98', '99' // Maranhão
+        ];
+
+        // Check if DDD is valid
+        if (!validDDDs.includes(ddd)) {
+            return { valid: false, message: 'DDD inválido' };
+        }
+
+        // Mobile numbers must start with 9
+        if (firstDigit !== '9') {
+            return { valid: false, message: 'Número de celular deve começar com 9' };
+        }
+
+        // Second digit of mobile must be 6-9
+        const secondDigit = cleaned.charAt(3);
+        if (!['6', '7', '8', '9'].includes(secondDigit)) {
+            return { valid: false, message: 'Número de celular inválido' };
+        }
+
+        // Check for repeated patterns (like 99999-9999)
+        const lastDigits = cleaned.substring(3);
+        if (/^(\d)\1{7,}$/.test(lastDigits)) {
+            return { valid: false, message: 'Número inválido (sequência repetida)' };
+        }
+
+        return { valid: true, message: 'Número válido' };
+    }
+
+    // Mask and validation for WhatsApp field
     const whatsappField = document.getElementById('whatsapp');
     if (whatsappField) {
         whatsappField.addEventListener('input', function(e) {
             let value = e.target.value.replace(/\D/g, '');
             let formatted = '';
+
+            // Limit to 11 digits
+            value = value.substring(0, 11);
 
             if (value.length > 0) {
                 formatted = '(' + value.substring(0, 2);
@@ -155,7 +248,63 @@ document.addEventListener('DOMContentLoaded', function() {
             }
 
             e.target.value = formatted;
+
+            // Real-time validation feedback
+            if (value.length === 11) {
+                const validation = isValidBrazilianPhone(value);
+                if (validation.valid) {
+                    e.target.style.borderColor = '#4caf50';
+                    e.target.setCustomValidity('');
+                    removeValidationMessage(e.target);
+                } else {
+                    e.target.style.borderColor = '#ff6b6b';
+                    e.target.setCustomValidity(validation.message);
+                    showValidationMessage(e.target, validation.message);
+                }
+            } else if (value.length > 0) {
+                e.target.style.borderColor = '#ff6b6b';
+                e.target.setCustomValidity('Digite o número completo com DDD');
+            } else {
+                e.target.style.borderColor = '';
+                e.target.setCustomValidity('');
+                removeValidationMessage(e.target);
+            }
         });
+
+        // Validate on blur
+        whatsappField.addEventListener('blur', function(e) {
+            const value = e.target.value.replace(/\D/g, '');
+            if (value.length > 0) {
+                const validation = isValidBrazilianPhone(value);
+                if (!validation.valid) {
+                    e.target.style.borderColor = '#ff6b6b';
+                    showValidationMessage(e.target, validation.message || 'Número de WhatsApp inválido');
+                } else {
+                    e.target.style.borderColor = '#4caf50';
+                    removeValidationMessage(e.target);
+                }
+            }
+        });
+    }
+
+    // Function to show validation message
+    function showValidationMessage(element, message) {
+        removeValidationMessage(element);
+        const errorDiv = document.createElement('div');
+        errorDiv.className = 'validation-error';
+        errorDiv.textContent = message;
+        errorDiv.style.color = '#ff6b6b';
+        errorDiv.style.fontSize = '0.85rem';
+        errorDiv.style.marginTop = '5px';
+        element.parentElement.appendChild(errorDiv);
+    }
+
+    // Function to remove validation message
+    function removeValidationMessage(element) {
+        const existingError = element.parentElement.querySelector('.validation-error');
+        if (existingError) {
+            existingError.remove();
+        }
     }
 
     const heroScroll = document.querySelector('.hero-scroll');
