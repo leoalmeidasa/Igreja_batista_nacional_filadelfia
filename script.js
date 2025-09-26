@@ -1,0 +1,270 @@
+document.addEventListener('DOMContentLoaded', function() {
+    const navToggle = document.querySelector('.nav-toggle');
+    const navMenu = document.querySelector('.nav-menu');
+    const navLinks = document.querySelectorAll('.nav-link');
+    const logoLink = document.querySelector('.logo');
+    const scrollToTopBtn = document.getElementById('scrollToTop');
+    const header = document.querySelector('.header');
+    const prayerForm = document.getElementById('prayerForm');
+
+    navToggle.addEventListener('click', function() {
+        navMenu.classList.toggle('active');
+
+        const spans = navToggle.querySelectorAll('span');
+        spans[0].style.transform = navMenu.classList.contains('active')
+            ? 'rotate(45deg) translateY(8px)'
+            : 'none';
+        spans[1].style.opacity = navMenu.classList.contains('active')
+            ? '0'
+            : '1';
+        spans[2].style.transform = navMenu.classList.contains('active')
+            ? 'rotate(-45deg) translateY(-8px)'
+            : 'none';
+    });
+
+    navLinks.forEach(link => {
+        link.addEventListener('click', () => {
+            navMenu.classList.remove('active');
+            const spans = navToggle.querySelectorAll('span');
+            spans[0].style.transform = 'none';
+            spans[1].style.opacity = '1';
+            spans[2].style.transform = 'none';
+        });
+    });
+
+    function smoothScroll(e) {
+        e.preventDefault();
+        const targetId = this.getAttribute('href');
+
+        if (targetId === '#inicio') {
+            window.scrollTo({
+                top: 0,
+                behavior: 'smooth'
+            });
+        } else {
+            const targetSection = document.querySelector(targetId);
+            const headerHeight = header.offsetHeight;
+            const targetPosition = targetSection.offsetTop - headerHeight;
+
+            window.scrollTo({
+                top: targetPosition,
+                behavior: 'smooth'
+            });
+        }
+    }
+
+    navLinks.forEach(link => {
+        link.addEventListener('click', smoothScroll);
+    });
+
+    if (logoLink) {
+        logoLink.addEventListener('click', smoothScroll);
+    }
+
+    window.addEventListener('scroll', function() {
+        if (window.scrollY > 100) {
+            header.style.background = 'rgba(255, 255, 255, 0.98)';
+            header.style.boxShadow = '0 2px 20px rgba(0, 0, 0, 0.1)';
+        } else {
+            header.style.background = 'rgba(255, 255, 255, 0.98)';
+            header.style.boxShadow = '0 2px 20px rgba(0, 0, 0, 0.1)';
+        }
+
+        if (window.scrollY > 300) {
+            scrollToTopBtn.classList.add('show');
+        } else {
+            scrollToTopBtn.classList.remove('show');
+        }
+    });
+
+    scrollToTopBtn.addEventListener('click', function() {
+        window.scrollTo({
+            top: 0,
+            behavior: 'smooth'
+        });
+    });
+
+    const observerOptions = {
+        threshold: 0.1,
+        rootMargin: '0px 0px -50px 0px'
+    };
+
+    const observer = new IntersectionObserver(function(entries) {
+        entries.forEach(entry => {
+            if (entry.isIntersecting) {
+                entry.target.style.opacity = '1';
+                entry.target.style.transform = 'translateY(0)';
+            }
+        });
+    }, observerOptions);
+
+    const animateElements = document.querySelectorAll('.service-card, .ministry-card, .value-item');
+    animateElements.forEach(el => {
+        el.style.opacity = '0';
+        el.style.transform = 'translateY(30px)';
+        el.style.transition = 'opacity 0.6s ease, transform 0.6s ease';
+        observer.observe(el);
+    });
+
+    prayerForm.addEventListener('submit', function(e) {
+        e.preventDefault();
+
+        const name = document.getElementById('name').value;
+        const whatsapp = document.getElementById('whatsapp').value;
+        const prayer = document.getElementById('prayer').value;
+
+        // Format message for WhatsApp
+        const message = `*PEDIDO DE ORAÇÃO*\n\n*Nome:* ${name}\n*WhatsApp:* ${whatsapp}\n\n*Pedido:* ${prayer}`;
+
+        // Encode message for URL
+        const encodedMessage = encodeURIComponent(message);
+
+        // WhatsApp API URL
+        const whatsappURL = `https://wa.me/5598981004176?text=${encodedMessage}`;
+
+        // Show success feedback
+        const submitBtn = this.querySelector('.btn');
+        const originalText = submitBtn.textContent;
+        submitBtn.textContent = 'Redirecionando para WhatsApp...';
+        submitBtn.style.background = '#4caf50';
+
+        // Open WhatsApp after a brief delay
+        setTimeout(() => {
+            window.open(whatsappURL, '_blank');
+            submitBtn.textContent = originalText;
+            submitBtn.style.background = '';
+            this.reset();
+        }, 1000);
+    });
+
+    // Mask for WhatsApp field
+    const whatsappField = document.getElementById('whatsapp');
+    if (whatsappField) {
+        whatsappField.addEventListener('input', function(e) {
+            let value = e.target.value.replace(/\D/g, '');
+            let formatted = '';
+
+            if (value.length > 0) {
+                formatted = '(' + value.substring(0, 2);
+            }
+            if (value.length >= 3) {
+                formatted += ') ' + value.substring(2, 7);
+            }
+            if (value.length >= 8) {
+                formatted += '-' + value.substring(7, 11);
+            }
+
+            e.target.value = formatted;
+        });
+    }
+
+    const heroScroll = document.querySelector('.hero-scroll');
+    if (heroScroll) {
+        heroScroll.addEventListener('click', function() {
+            const aboutSection = document.getElementById('sobre');
+            const headerHeight = header.offsetHeight;
+            const targetPosition = aboutSection.offsetTop - headerHeight;
+
+            window.scrollTo({
+                top: targetPosition,
+                behavior: 'smooth'
+            });
+        });
+    }
+
+    const currentYear = new Date().getFullYear();
+    const footerYear = document.querySelector('.footer-bottom p');
+    if (footerYear) {
+        footerYear.innerHTML = `&copy; ${currentYear} Igreja Batista Nacional Filadélfia. Todos os direitos reservados.`;
+    }
+
+    const serviceCards = document.querySelectorAll('.service-card');
+    serviceCards.forEach((card, index) => {
+        card.style.animationDelay = `${index * 0.1}s`;
+    });
+
+    const ministryCards = document.querySelectorAll('.ministry-card');
+    ministryCards.forEach((card, index) => {
+        card.style.animationDelay = `${index * 0.1}s`;
+    });
+
+    function parallaxEffect() {
+        const scrolled = window.pageYOffset;
+        const hero = document.querySelector('.hero');
+        if (hero) {
+            hero.style.transform = `translateY(${scrolled * 0.5}px)`;
+        }
+    }
+
+    window.addEventListener('scroll', parallaxEffect);
+
+    const counters = [
+        { element: null, target: 500, label: 'Membros', duration: 2000 },
+        { element: null, target: 15, label: 'Anos de História', duration: 2000 },
+        { element: null, target: 10, label: 'Ministérios', duration: 2000 }
+    ];
+
+    function animateCounter(element, target, duration) {
+        let current = 0;
+        const increment = target / (duration / 16);
+        const timer = setInterval(() => {
+            current += increment;
+            if (current >= target) {
+                element.textContent = target;
+                clearInterval(timer);
+            } else {
+                element.textContent = Math.floor(current);
+            }
+        }, 16);
+    }
+
+    const lazyImages = document.querySelectorAll('img[data-src]');
+    const imageObserver = new IntersectionObserver((entries) => {
+        entries.forEach(entry => {
+            if (entry.isIntersecting) {
+                const img = entry.target;
+                img.src = img.dataset.src;
+                img.removeAttribute('data-src');
+                imageObserver.unobserve(img);
+            }
+        });
+    });
+
+    lazyImages.forEach(img => imageObserver.observe(img));
+
+    function handleResize() {
+        const isMobile = window.innerWidth <= 768;
+        if (isMobile) {
+            document.body.classList.add('mobile');
+        } else {
+            document.body.classList.remove('mobile');
+            navMenu.classList.remove('active');
+        }
+    }
+
+    window.addEventListener('resize', handleResize);
+    handleResize();
+
+    const touchStartX = { value: 0 };
+    const touchEndX = { value: 0 };
+
+    document.addEventListener('touchstart', e => {
+        touchStartX.value = e.changedTouches[0].screenX;
+    });
+
+    document.addEventListener('touchend', e => {
+        touchEndX.value = e.changedTouches[0].screenX;
+        handleSwipe();
+    });
+
+    function handleSwipe() {
+        const swipeThreshold = 50;
+        const diff = touchEndX.value - touchStartX.value;
+
+        if (Math.abs(diff) > swipeThreshold) {
+            if (diff > 0 && navMenu.classList.contains('active')) {
+                navMenu.classList.remove('active');
+            }
+        }
+    }
+});
