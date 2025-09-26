@@ -478,6 +478,23 @@ body {
     background: rgba(255, 255, 255, 0.2);
 }
 
+.form-group input:invalid:not(:placeholder-shown) {
+    border-color: #ff6b6b !important;
+}
+
+.form-group input:valid:not(:placeholder-shown) {
+    border-color: #4caf50 !important;
+}
+
+.validation-error {
+    color: var(--white) !important;
+    background: rgba(255, 107, 107, 0.2);
+    padding: 5px 10px;
+    border-radius: 5px;
+    margin-top: 5px;
+    font-size: 0.85rem;
+}
+
 .prayer-form .btn {
     background: var(--white);
     color: var(--primary-color);
